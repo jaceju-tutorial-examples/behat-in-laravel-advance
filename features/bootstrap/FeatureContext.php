@@ -5,14 +5,16 @@ use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase;
 
-/**
- * Defines application features from the specific context.
- */
-class FeatureContext extends TestCase implements Context
+abstract class FeatureContext extends TestCase implements Context
 {
     use RefreshDatabase;
 
     protected const ENV_FILE = '.env.behat';
+
+    /**
+     * @var \Illuminate\Foundation\Application
+     */
+    protected static $contextSharedApp;
 
     /**
      * @return \Illuminate\Foundation\Application
@@ -33,7 +35,13 @@ class FeatureContext extends TestCase implements Context
      */
     public function before()
     {
-        $this->setUp();
+        if (!static::$contextSharedApp) {
+            parent::setUp();
+            static::$contextSharedApp = $this->app;
+        } else {
+            $this->app = static::$contextSharedApp;
+        }
+
     }
 
     /**
@@ -41,6 +49,9 @@ class FeatureContext extends TestCase implements Context
      */
     public function after()
     {
-        $this->tearDown();
+        if (static::$contextSharedApp) {
+            parent::tearDown();
+            static::$contextSharedApp = null;
+        }
     }
 }
