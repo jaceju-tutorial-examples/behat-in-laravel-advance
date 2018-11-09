@@ -2,8 +2,9 @@
 
 use Behat\Behat\Context\Context;
 use Behat\Gherkin\Node\TableNode;
+use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+use Illuminate\Foundation\Testing\TestCase;
 
 /**
  * Defines application features from the specific context.
@@ -12,13 +13,27 @@ class FeatureContext extends TestCase implements Context
 {
     use RefreshDatabase;
 
+    protected const ENV_FILE = '.env.behat';
+
+    /**
+     * @return \Illuminate\Foundation\Application
+     */
+    public function createApplication()
+    {
+        $app = require __DIR__ . '/../../bootstrap/app.php';
+
+        $app->loadEnvironmentFrom(self::ENV_FILE);
+
+        $app->make(Kernel::class)->bootstrap();
+
+        return $app;
+    }
+
     /**
      * @BeforeScenario
      */
     public function before()
     {
-        putenv('DB_CONNECTION=sqlite');
-        putenv('DB_DATABASE=:memory:');
         $this->setUp();
     }
 
